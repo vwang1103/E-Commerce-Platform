@@ -1,0 +1,62 @@
+server:
+  port: ${SERVER_PORT:8083}
+
+spring:
+  config:
+    import: optional:classpath:service-common.yml
+  application:
+    name: order-service
+  flyway:
+    enabled: false
+  cloud:
+    openfeign:
+      client:
+        config:
+          inventory-service:
+            connect-timeout: 1000
+            read-timeout: 3000
+            logger-level: basic
+          catalog-service:
+            connect-timeout: 1000
+            read-timeout: 2000
+            logger-level: basic
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+order:
+  datasource:
+    shard-0:
+      url: ${ORDER_DB_SHARD_0_URL:jdbc:mysql://localhost:13307/order_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+    shard-1:
+      url: ${ORDER_DB_SHARD_1_URL:jdbc:mysql://localhost:13308/order_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+    username: ${ORDER_DB_USER:ecommerce}
+    password: ${ORDER_DB_PASSWORD:local-app-password}
+  inventory:
+    service-url: ${INVENTORY_SERVICE_URL:}
+    reservation-ttl-seconds: ${ORDER_RESERVATION_TTL_SECONDS:900}
+  catalog:
+    service-url: ${CATALOG_SERVICE_URL:}
+  payment-deadline: ${ORDER_PAYMENT_DEADLINE:15m}
+  events:
+    enabled: ${ORDER_EVENTS_ENABLED:false}
+    workflow-topic: ${ORDER_WORKFLOW_TOPIC:order.workflow.v1}
+    inventory-topic: ${ORDER_INVENTORY_TOPIC:inventory.command.v1}
+    workflow-consumer-group: ${ORDER_WORKFLOW_CONSUMER_GROUP:order-workflow-v1}
+    inventory-consumer-group: ${ORDER_INVENTORY_CONSUMER_GROUP:order-inventory-orchestrator-v1}
+    outbox-batch-size: ${ORDER_OUTBOX_BATCH_SIZE:100}
+    outbox-poll-delay: ${ORDER_OUTBOX_POLL_DELAY:500}
+  expiry:
+    enabled: ${ORDER_EXPIRY_ENABLED:true}
+    batch-size: ${ORDER_EXPIRY_BATCH_SIZE:100}
+    poll-delay: ${ORDER_EXPIRY_POLL_DELAY:1000}
+
+ecommerce:
+  kafka:
+    dlt:
+      enabled: ${order.events.enabled}
+      replay-enabled: ${ORDER_DLT_REPLAY_ENABLED:false}
+      allowed-topics: ${order.events.workflow-topic},${order.events.inventory-topic}

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --animate-fade-in: fade-in 0.18s ease-out;
+  --animate-slide-in-right: slide-in-right 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-slide-up: slide-up 0.24s ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); }
+    to { transform: none; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-white font-sans text-slate-800 antialiased; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-emerald-600; }
+  button:not(:disabled) { cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+@layer components {
+  .container-page { width: min(78rem, 100% - 2rem); margin-inline: auto; }
+
+  .btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm { @apply h-9 px-4 text-xs; }
+  .btn-primary { @apply bg-emerald-600 text-white hover:bg-emerald-700 disabled:hover:bg-emerald-600; }
+  .btn-dark { @apply bg-slate-900 text-white hover:bg-slate-700 disabled:hover:bg-slate-900; }
+  .btn-secondary { @apply border border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50; }
+  .btn-ghost { @apply text-slate-700 hover:bg-slate-100; }
+  .btn-danger { @apply border border-rose-200 bg-white text-rose-700 hover:bg-rose-50; }
+
+  .input {
+    @apply h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-2 focus:outline-offset-0 focus:outline-emerald-100 disabled:bg-slate-100 disabled:text-slate-500;
+  }
+  textarea.input { @apply h-auto py-2.5; }
+  .label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .field-error { @apply mt-1 text-xs text-rose-600; }
+
+  .card { @apply rounded-2xl border border-slate-200 bg-white; }
+  .eyebrow { @apply text-xs font-semibold tracking-wider text-emerald-600 uppercase; }
+  .page-title { @apply text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl; }
+  .chip {
+    @apply inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400;
+  }
+  .chip[aria-pressed="true"], .chip[aria-current="true"] { @apply border-slate-900 bg-slate-900 text-white; }
+}

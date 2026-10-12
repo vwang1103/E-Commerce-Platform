@@ -1,0 +1,30 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  config:
+    import: optional:classpath:service-common.yml
+  application:
+    name: inventory-service
+  datasource:
+    url: ${INVENTORY_DB_URL:jdbc:mysql://localhost:13306/inventory_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+    username: ${INVENTORY_DB_USER:ecommerce}
+    password: ${INVENTORY_DB_PASSWORD:local-app-password}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: ${REDIS_TIMEOUT:2s}
+      repositories:
+        enabled: false
+  flyway:
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+    validate-migration-naming: true
+
+inventory:
+  reservation:
+    default-ttl: ${INVENTORY_RESERVATION_DEFAULT_TTL:15m}
+    maximum-ttl: ${INVENTORY_RESERVATION_MAX_TTL:1h}
+    redis-retention: ${INVENTORY_RESERVATION_REDIS_RETENTION:24h}
+    expiry-delay: ${INVENTORY_RESERVATION_EXPIRY_DELAY:1s}
+    expiry-batch-size: ${INVENTORY_RESERVATION_EXPIRY_BATCH_SIZE:100}

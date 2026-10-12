@@ -1,0 +1,62 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "index.max_ngram_diff": 18,
+    "analysis": {
+      "tokenizer": {
+        "product_infix_tokenizer": {
+          "type": "ngram",
+          "min_gram": 2,
+          "max_gram": 20,
+          "token_chars": ["letter", "digit"]
+        }
+      },
+      "analyzer": {
+        "product_infix": {
+          "type": "custom",
+          "tokenizer": "product_infix_tokenizer",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "product_search": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "productId": { "type": "long" },
+      "userId": { "type": "keyword" },
+      "categoryId": { "type": "long" },
+      "name": {
+        "type": "text",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 },
+          "partial": {
+            "type": "text",
+            "analyzer": "product_infix",
+            "search_analyzer": "product_search"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "fields": {
+          "partial": {
+            "type": "text",
+            "analyzer": "product_infix",
+            "search_analyzer": "product_search"
+          }
+        }
+      },
+      "priceMinor": { "type": "long" },
+      "currency": { "type": "keyword" },
+      "status": { "type": "keyword" },
+      "version": { "type": "long" }
+    }
+  }
+}

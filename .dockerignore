@@ -1,0 +1,11 @@
+.git
+.idea
+.vscode
+.DS_Store
+**/target
+**/node_modules
+**/.next
+frontend/out
+docs
+performance
+deploy/aws

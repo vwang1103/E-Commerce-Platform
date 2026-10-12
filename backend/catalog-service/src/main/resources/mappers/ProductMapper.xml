@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vincentwang.ecommerce.catalog.infrastructure.persistence.IProductMapper">
+  <resultMap id="productResult" type="com.vincentwang.ecommerce.catalog.domain.model.Product">
+    <id property="productId" column="product_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="categoryId" column="category_id"/>
+    <result property="name" column="name"/>
+    <result property="description" column="description"/>
+    <result property="priceMinor" column="price_minor"/>
+    <result property="currency" column="currency"/>
+    <result property="status" column="status" javaType="com.vincentwang.ecommerce.catalog.domain.model.ProductStatus"/>
+    <result property="version" column="version"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+
+  <sql id="productColumns">
+    product_id, user_id, category_id, name, description, price_minor,
+    currency, status, version, created_at, updated_at
+  </sql>
+
+  <insert id="insert" parameterType="com.vincentwang.ecommerce.catalog.domain.model.Product"
+          useGeneratedKeys="true" keyProperty="productId" keyColumn="product_id">
+    INSERT INTO product
+      (user_id, category_id, name, description, price_minor, currency, status, version)
+    VALUES
+      (#{userId}, #{categoryId}, #{name}, #{description}, #{priceMinor},
+       #{currency}, #{status}, 0)
+  </insert>
+
+  <select id="findById" resultMap="productResult">
+    SELECT <include refid="productColumns"/>
+    FROM product
+    WHERE product_id = #{productId}
+  </select>
+
+  <select id="findPage" resultMap="productResult">
+    SELECT <include refid="productColumns"/>
+    FROM product
+    <where>
+      status = 'ACTIVE'
+      <if test="userId != null">AND user_id = #{userId}</if>
+    </where>
+    ORDER BY product_id ASC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*)
+    FROM product
+    <where>
+      status = 'ACTIVE'
+      <if test="userId != null">AND user_id = #{userId}</if>
+    </where>
+  </select>
+
+  <select id="searchLike" resultMap="productResult">
+    SELECT <include refid="productColumns"/>
+    FROM product
+    WHERE status = 'ACTIVE'
+      AND (
+        LOWER(name) LIKE CONCAT('%', LOWER(#{query}), '%') ESCAPE '\\'
+        OR LOWER(description) LIKE CONCAT('%', LOWER(#{query}), '%') ESCAPE '\\'
+      )
+    ORDER BY product_id ASC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countLike" resultType="long">
+    SELECT COUNT(*)
+    FROM product
+    WHERE status = 'ACTIVE'
+      AND (
+        LOWER(name) LIKE CONCAT('%', LOWER(#{query}), '%') ESCAPE '\\'
+        OR LOWER(description) LIKE CONCAT('%', LOWER(#{query}), '%') ESCAPE '\\'
+      )
+  </select>
+
+  <select id="categoryExists" resultType="boolean">
+    SELECT EXISTS(SELECT 1 FROM category WHERE category_id = #{categoryId})
+  </select>
+
+  <resultMap id="categoryResult" type="com.vincentwang.ecommerce.catalog.domain.model.Category">
+    <constructor>
+      <idArg column="category_id" javaType="_long"/>
+      <arg column="parent_category_id" javaType="long"/>
+      <arg column="name" javaType="string"/>
+      <arg column="slug" javaType="string"/>
+    </constructor>
+  </resultMap>
+
+  <select id="findCategories" resultMap="categoryResult">
+    SELECT category_id, parent_category_id, name, slug
+    FROM category
+    ORDER BY category_id ASC
+  </select>
+
+  <update id="update" parameterType="com.vincentwang.ecommerce.catalog.domain.model.Product">
+    UPDATE product
+    SET category_id = #{categoryId},
+        name = #{name},
+        description = #{description},
+        price_minor = #{priceMinor},
+        currency = #{currency},
+        status = #{status},
+        version = version + 1
+    WHERE product_id = #{productId}
+      AND version = #{version}
+  </update>
+
+  <insert id="insertOutbox">
+    INSERT INTO catalog_outbox
+      (event_id, aggregate_type, aggregate_id, event_type, payload, occurred_at)
+    VALUES
+      (#{eventId}, 'product', CAST(#{product.productId} AS CHAR), #{eventType},
+       JSON_OBJECT(
+         'productId', #{product.productId},
+         'userId', #{product.userId},
+         'categoryId', #{product.categoryId},
+         'name', #{product.name},
+         'description', #{product.description},
+         'priceMinor', #{product.priceMinor},
+         'currency', #{product.currency},
+         'status', #{product.status},
+         'version', #{product.version}),
+       #{occurredAt})
+  </insert>
+
+  <select id="findUnpublishedOutbox"
+          resultType="com.vincentwang.ecommerce.catalog.infrastructure.messaging.CatalogOutboxEvent">
+    SELECT event_id, aggregate_type, aggregate_id, event_type,
+           CAST(payload AS CHAR) AS payload, occurred_at
+    FROM catalog_outbox
+    WHERE published_at IS NULL
+    ORDER BY occurred_at ASC, event_id ASC
+    LIMIT #{limit}
+    FOR UPDATE SKIP LOCKED
+  </select>
+
+  <update id="markOutboxPublished">
+    UPDATE catalog_outbox
+    SET published_at = CURRENT_TIMESTAMP(6)
+    WHERE event_id = #{eventId}
+      AND published_at IS NULL
+  </update>
+</mapper>

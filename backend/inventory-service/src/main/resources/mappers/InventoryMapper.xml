@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vincentwang.ecommerce.inventory.infrastructure.persistence.IInventoryMapper">
+  <resultMap id="inventoryResult" type="com.vincentwang.ecommerce.inventory.domain.model.Inventory">
+    <constructor>
+      <idArg column="product_id" javaType="_long"/>
+      <arg column="total_quantity" javaType="_long"/>
+      <arg column="available_quantity" javaType="_long"/>
+      <arg column="reserved_quantity" javaType="_long"/>
+      <arg column="sold_quantity" javaType="_long"/>
+      <arg column="version" javaType="_long"/>
+      <arg column="updated_at" javaType="java.time.Instant"/>
+    </constructor>
+  </resultMap>
+
+  <resultMap id="reservationResult" type="com.vincentwang.ecommerce.inventory.domain.model.InventoryReservation">
+    <constructor>
+      <idArg column="order_id" javaType="_long"/>
+      <arg column="user_id" javaType="string"/>
+      <arg column="product_id" javaType="_long"/>
+      <arg column="quantity" javaType="_long"/>
+      <arg column="status" javaType="com.vincentwang.ecommerce.inventory.domain.model.ReservationStatus"/>
+      <arg column="expires_at" javaType="java.time.Instant"/>
+      <arg column="created_at" javaType="java.time.Instant"/>
+      <arg column="updated_at" javaType="java.time.Instant"/>
+    </constructor>
+  </resultMap>
+
+  <insert id="insertInventory">
+    INSERT INTO inventory
+      (product_id, total_quantity, available_quantity, reserved_quantity, sold_quantity, version)
+    VALUES
+      (#{productId}, #{totalQuantity}, #{totalQuantity}, 0, 0, 0)
+  </insert>
+
+  <select id="findInventory" resultMap="inventoryResult">
+    SELECT product_id, total_quantity, available_quantity, reserved_quantity, sold_quantity, version, updated_at
+    FROM inventory
+    WHERE product_id = #{productId}
+  </select>
+
+  <select id="findInventories" resultMap="inventoryResult">
+    SELECT product_id, total_quantity, available_quantity, reserved_quantity, sold_quantity, version, updated_at
+    FROM inventory
+    WHERE product_id IN
+    <foreach collection="productIds" item="productId" open="(" separator="," close=")">#{productId}</foreach>
+    ORDER BY product_id
+  </select>
+
+  <select id="findAllInventory" resultMap="inventoryResult">
+    SELECT product_id, total_quantity, available_quantity, reserved_quantity, sold_quantity, version, updated_at
+    FROM inventory
+    ORDER BY product_id
+  </select>
+
+  <update id="reserveStock">
+    UPDATE inventory
+    SET available_quantity = available_quantity - #{quantity},
+        reserved_quantity = reserved_quantity + #{quantity},
+        version = version + 1
+    WHERE product_id = #{productId}
+      AND available_quantity &gt;= #{quantity}
+  </update>
+
+  <update id="confirmStock">
+    UPDATE inventory
+    SET reserved_quantity = reserved_quantity - #{quantity},
+        sold_quantity = sold_quantity + #{quantity},
+        version = version + 1
+    WHERE product_id = #{productId}
+      AND reserved_quantity &gt;= #{quantity}
+  </update>
+
+  <update id="cancelStock">
+    UPDATE inventory
+    SET available_quantity = available_quantity + #{quantity},
+        reserved_quantity = reserved_quantity - #{quantity},
+        version = version + 1
+    WHERE product_id = #{productId}
+      AND reserved_quantity &gt;= #{quantity}
+  </update>
+
+  <insert id="insertReservation" parameterType="com.vincentwang.ecommerce.inventory.domain.model.InventoryReservation">
+    INSERT INTO inventory_reservation
+      (reservation_id, order_id, user_id, product_id, quantity, status, expires_at)
+    VALUES
+      (UUID(), #{orderId}, #{userId}, #{productId}, #{quantity}, #{status}, #{expiresAt})
+  </insert>
+
+  <select id="findReservation" resultMap="reservationResult">
+    SELECT order_id, user_id, product_id, quantity, status, expires_at, created_at, updated_at
+    FROM inventory_reservation
+    WHERE order_id = #{orderId}
+    ORDER BY product_id
+    LIMIT 1
+  </select>
+
+  <select id="findReservations" resultMap="reservationResult">
+    SELECT order_id, user_id, product_id, quantity, status, expires_at, created_at, updated_at
+    FROM inventory_reservation
+    WHERE order_id = #{orderId}
+    ORDER BY product_id
+  </select>
+
+  <update id="markConfirmed">
+    UPDATE inventory_reservation
+    SET status = 'CONFIRMED'
+    WHERE order_id = #{orderId}
+      AND product_id = #{productId}
+      AND status = 'TRY'
+  </update>
+
+  <update id="markCancelled">
+    UPDATE inventory_reservation
+    SET status = 'CANCELLED'
+    WHERE order_id = #{orderId}
+      AND product_id = #{productId}
+      AND status = 'TRY'
+  </update>
+
+  <insert id="enqueueInventorySync">
+    INSERT IGNORE INTO inventory_redis_sync (order_id, product_id, operation)
+    VALUES (#{orderId}, #{productId}, #{operation})
+  </insert>
+
+  <select id="findPendingInventorySync" resultType="com.vincentwang.ecommerce.inventory.application.model.InventorySyncTask">
+    SELECT sync_id, order_id, product_id, operation
+    FROM inventory_redis_sync
+    WHERE applied_at IS NULL
+    ORDER BY sync_id
+    LIMIT #{limit}
+    FOR UPDATE SKIP LOCKED
+  </select>
+
+  <update id="markInventorySyncApplied">
+    UPDATE inventory_redis_sync
+    SET applied_at = CURRENT_TIMESTAMP(6), last_error = NULL
+    WHERE sync_id = #{syncId} AND applied_at IS NULL
+  </update>
+
+  <update id="markInventorySyncFailed">
+    UPDATE inventory_redis_sync
+    SET attempts = attempts + 1, last_error = #{error}
+    WHERE sync_id = #{syncId} AND applied_at IS NULL
+  </update>
+
+  <select id="findExpiredTryReservations" resultMap="reservationResult">
+    SELECT order_id, user_id, product_id, quantity, status, expires_at, created_at, updated_at
+    FROM inventory_reservation
+    WHERE status = 'TRY'
+      AND expires_at &lt;= #{now}
+    ORDER BY expires_at, order_id
+    LIMIT #{limit}
+  </select>
+</mapper>

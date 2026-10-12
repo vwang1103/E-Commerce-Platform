@@ -1,0 +1,63 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  config:
+    import: optional:classpath:service-common.yml
+  application:
+    name: gateway-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: ${REDIS_TIMEOUT:2s}
+      repositories:
+        enabled: false
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              "[/**]":
+                allowed-origin-patterns: ${GATEWAY_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:3000}
+                allowed-methods: [GET, POST, PUT, OPTIONS]
+                allowed-headers: [Accept, Content-Type, Idempotency-Key, X-Correlation-Id, X-User-Id]
+                exposed-headers:
+                  - Location
+                  - Retry-After
+                  - X-Correlation-Id
+                  - X-RateLimit-Burst-Capacity
+                  - X-RateLimit-Remaining
+                  - X-RateLimit-Replenish-Rate
+                  - X-RateLimit-Requested-Tokens
+                  - X-RateLimit-Status
+                allow-credentials: false
+                max-age: 3600
+    consul:
+      discovery:
+        health-check-path: /actuator/health/readiness
+        prefer-ip-address: true
+
+gateway:
+  rate-limit:
+    enabled: ${GATEWAY_RATE_LIMIT_ENABLED:true}
+    fail-open: ${GATEWAY_RATE_LIMIT_FAIL_OPEN:true}
+    use-forwarded-for: ${GATEWAY_RATE_LIMIT_USE_FORWARDED_FOR:false}
+    trusted-proxy-count: ${GATEWAY_RATE_LIMIT_TRUSTED_PROXY_COUNT:1}
+    general:
+      replenish-rate: ${GATEWAY_GENERAL_REPLENISH_RATE:50}
+      burst-capacity: ${GATEWAY_GENERAL_BURST_CAPACITY:100}
+    search:
+      replenish-rate: ${GATEWAY_SEARCH_REPLENISH_RATE:20}
+      burst-capacity: ${GATEWAY_SEARCH_BURST_CAPACITY:40}
+    order-write:
+      replenish-rate: ${GATEWAY_ORDER_REPLENISH_RATE:5}
+      burst-capacity: ${GATEWAY_ORDER_BURST_CAPACITY:10}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

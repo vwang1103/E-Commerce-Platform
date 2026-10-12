@@ -1,0 +1,37 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  config:
+    import: optional:classpath:service-common.yml
+  application:
+    name: catalog-service
+  datasource:
+    url: ${CATALOG_DB_URL:jdbc:mysql://localhost:13306/catalog_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+    username: ${CATALOG_DB_USER:ecommerce}
+    password: ${CATALOG_DB_PASSWORD:local-app-password}
+  flyway:
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+    validate-migration-naming: true
+
+catalog:
+  events:
+    enabled: ${CATALOG_EVENTS_ENABLED:false}
+    product-topic: ${CATALOG_PRODUCT_TOPIC:catalog.product.v1}
+    outbox-batch-size: ${CATALOG_OUTBOX_BATCH_SIZE:100}
+    outbox-poll-delay: ${CATALOG_OUTBOX_POLL_DELAY:1000}
+  search:
+    consumer-group: ${CATALOG_SEARCH_CONSUMER_GROUP:catalog-search-indexer-v3}
+    mysql-benchmark:
+      enabled: ${CATALOG_MYSQL_SEARCH_BENCHMARK_ENABLED:false}
+    elasticsearch:
+      enabled: ${CATALOG_SEARCH_ENABLED:false}
+      base-url: ${ELASTICSEARCH_URL:http://localhost:9200}
+      index-name: ${ELASTICSEARCH_PRODUCT_INDEX:products-v3}
+
+ecommerce:
+  kafka:
+    dlt:
+      enabled: ${catalog.events.enabled}
+      replay-enabled: ${CATALOG_DLT_REPLAY_ENABLED:false}
+      allowed-topics: ${catalog.events.product-topic}

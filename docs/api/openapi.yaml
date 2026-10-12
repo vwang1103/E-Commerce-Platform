@@ -1,0 +1,1018 @@
+openapi: 3.1.0
+info:
+  title: E-Commerce Platform API
+  version: 0.1.0
+  description: Contract-first API for Catalog, Search, Inventory TCC, and the asynchronous Order workflow.
+servers:
+  - url: http://localhost:8080
+    description: Public API through Spring Cloud Gateway
+paths:
+  /api/v1/login:
+    post:
+      operationId: login
+      summary: Create or restore a local passwordless identity
+      description: Returns the same UUID for the same case-insensitive username. This is for the local MVP and is not production authentication.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              username: shopper
+      responses:
+        "200":
+          description: Local identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/products:
+    post:
+      operationId: createProduct
+      summary: Create a product
+      tags: [Catalog]
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+            example:
+              categoryId: 100
+              name: Developer Laptop
+              description: Laptop prepared for software development
+              priceMinor: 129900
+              currency: USD
+              status: ACTIVE
+      responses:
+        "201":
+          description: Product created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Relative URI of the new product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      operationId: listProducts
+      summary: List active products using stable product-ID ordering
+      tags: [Catalog]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Product page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/products/mine:
+    get:
+      operationId: listMyProducts
+      summary: List active products owned by the current local user
+      tags: [Catalog]
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Owned product page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductPage"
+  /api/v1/products/{productId}:
+    parameters:
+      - $ref: "#/components/parameters/ProductId"
+    get:
+      operationId: getProduct
+      summary: Get a product
+      tags: [Catalog]
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateProduct
+      summary: Replace editable product data using optimistic locking
+      tags: [Catalog]
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductRequest"
+            example:
+              categoryId: 100
+              name: Updated Developer Laptop
+              description: Updated description
+              priceMinor: 119900
+              currency: USD
+              status: ACTIVE
+              version: 0
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/search:
+    get:
+      operationId: searchProducts
+      summary: Search active products through Elasticsearch
+      description: Results are ordered by relevance and then product ID for deterministic pagination.
+      tags: [Search]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Matching active products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductSearchPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/categories:
+    get:
+      operationId: listCategories
+      summary: List every product category
+      tags: [Catalog]
+      responses:
+        "200":
+          description: Categories ordered by ID
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+  /api/v1/inventory:
+    get:
+      operationId: listInventory
+      summary: Read durable stock counters for several products at once
+      description: Product IDs without a stock record are omitted from the result.
+      tags: [Inventory]
+      parameters:
+        - name: productIds
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 100
+            items:
+              type: integer
+              format: int64
+              minimum: 1
+          example: 1001,1002
+      responses:
+        "200":
+          description: Inventory records for the products that exist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Inventory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/inventory/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+    put:
+      operationId: createInventory
+      summary: Create the initial stock record for a product
+      tags: [Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInventoryRequest"
+            example:
+              totalQuantity: 100
+      responses:
+        "201":
+          description: Inventory created in MySQL and Redis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inventory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    get:
+      operationId: getInventory
+      summary: Read durable stock counters
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Inventory found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inventory"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/inventory/reservations/try:
+    post:
+      operationId: tryInventoryReservation
+      summary: Atomically reserve available stock
+      tags: [Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TryReservationRequest"
+            example:
+              orderId: 1001
+              userId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+              productId: 1001
+              quantity: 2
+              ttlSeconds: 900
+      responses:
+        "200":
+          description: New or idempotently repeated reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryReservation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/v1/inventory/reservations/try-all:
+    post:
+      operationId: tryInventoryReservations
+      summary: Atomically reserve one or more products for an order
+      tags: [Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TryReservationsRequest"
+            example:
+              orderId: 1001
+              userId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+              items:
+                - productId: 1001
+                  quantity: 1
+                - productId: 1002
+                  quantity: 2
+              ttlSeconds: 900
+      responses:
+        "200":
+          description: New or idempotently repeated reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryReservation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/v1/inventory/reservations/{orderId}:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    get:
+      operationId: getInventoryReservation
+      summary: Read the durable reservation state
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Reservation found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryReservation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/inventory/reservations/{orderId}/all:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    get:
+      operationId: getInventoryReservations
+      summary: Read all durable reservation states for an order
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Reservations found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryReservation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/inventory/reservations/{orderId}/confirm:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      operationId: confirmInventoryReservation
+      summary: Convert reserved stock to sold stock idempotently
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Confirmed reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryReservation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/v1/inventory/reservations/{orderId}/confirm-all:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      operationId: confirmInventoryReservations
+      summary: Convert every reserved order item to sold stock idempotently
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Confirmed reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryReservation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/inventory/reservations/{orderId}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      operationId: cancelInventoryReservation
+      summary: Restore reserved stock idempotently
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Cancelled reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryReservation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/v1/inventory/reservations/{orderId}/cancel-all:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      operationId: cancelInventoryReservations
+      summary: Restore every reserved order item idempotently
+      tags: [Inventory]
+      responses:
+        "200":
+          description: Cancelled reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryReservation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/orders:
+    post:
+      operationId: createOrder
+      summary: Reserve inventory and accept an order for asynchronous processing
+      tags: [Order]
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+            example:
+              items:
+                - productId: 1001
+                  quantity: 2
+                - productId: 1002
+                  quantity: 1
+      responses:
+        "202":
+          description: Order and outbox event committed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    get:
+      operationId: listUserOrders
+      summary: List the current user's orders without a cross-shard broadcast
+      tags: [Order]
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: User order page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderPage"
+  /api/v1/orders/{orderId}:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+      - $ref: "#/components/parameters/UserIdHeader"
+    get:
+      operationId: getOrder
+      summary: Read the current asynchronous order state
+      tags: [Order]
+      responses:
+        "200":
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/orders/{orderId}/payment:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+      - $ref: "#/components/parameters/UserIdHeader"
+      - $ref: "#/components/parameters/IdempotencyKey"
+    post:
+      operationId: simulateOrderPayment
+      summary: Idempotently pay a pending order and enqueue inventory confirmation
+      tags: [Order]
+      responses:
+        "200":
+          description: Payment accepted and inventory confirmation queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+components:
+  parameters:
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+    UserIdHeader:
+      name: X-User-Id
+      in: header
+      required: true
+      description: Local user identity and database-shard routing key returned by POST /api/v1/login
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Request validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Conflict:
+      description: Resource state conflict or insufficient inventory
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ServiceUnavailable:
+      description: A required reservation dependency is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 40
+    LoginResponse:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+    ProductStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, INACTIVE]
+    Category:
+      type: object
+      required: [categoryId, name, slug]
+      properties:
+        categoryId:
+          type: integer
+          format: int64
+        parentCategoryId:
+          type: [integer, "null"]
+          format: int64
+        name:
+          type: string
+        slug:
+          type: string
+    CreateProductRequest:
+      type: object
+      required: [categoryId, name, description, priceMinor, currency, status]
+      properties:
+        categoryId:
+          type: integer
+          format: int64
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Price in the currency's minor unit, such as cents for USD
+        currency:
+          type: string
+          pattern: "^[A-Za-z]{3}$"
+        status:
+          $ref: "#/components/schemas/ProductStatus"
+    UpdateProductRequest:
+      allOf:
+        - $ref: "#/components/schemas/CreateProductRequest"
+        - type: object
+          required: [version]
+          properties:
+            version:
+              type: integer
+              format: int64
+              minimum: 0
+              description: Version returned by the latest read; stale values receive HTTP 409
+    Product:
+      allOf:
+        - $ref: "#/components/schemas/CreateProductRequest"
+        - type: object
+          required: [productId, userId, version, createdAt, updatedAt]
+          properties:
+            productId:
+              type: integer
+              format: int64
+            userId:
+              type: string
+              format: uuid
+            version:
+              type: integer
+              format: int64
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    ProductPage:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+    ProductSearchDocument:
+      type: object
+      required: [productId, userId, categoryId, name, description, priceMinor, currency, status, version]
+      properties:
+        productId:
+          type: integer
+          format: int64
+        userId:
+          type: string
+          format: uuid
+        categoryId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        priceMinor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProductStatus"
+        version:
+          type: integer
+          format: int64
+    ProductSearchPage:
+      type: object
+      required: [items, page, size, totalElements, totalPages, tookMillis]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductSearchDocument"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        tookMillis:
+          type: integer
+          format: int64
+          description: Elasticsearch-reported query execution time
+    CreateInventoryRequest:
+      type: object
+      required: [totalQuantity]
+      properties:
+        totalQuantity:
+          type: integer
+          format: int64
+          minimum: 0
+    Inventory:
+      type: object
+      required: [productId, totalQuantity, availableQuantity, reservedQuantity, soldQuantity, version, updatedAt]
+      properties:
+        productId:
+          type: integer
+          format: int64
+        totalQuantity:
+          type: integer
+          format: int64
+        availableQuantity:
+          type: integer
+          format: int64
+        reservedQuantity:
+          type: integer
+          format: int64
+        soldQuantity:
+          type: integer
+          format: int64
+        version:
+          type: integer
+          format: int64
+        updatedAt:
+          type: string
+          format: date-time
+    TryReservationRequest:
+      type: object
+      required: [orderId, userId, productId, quantity]
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          minimum: 1
+        userId:
+          type: string
+          format: uuid
+        productId:
+          type: integer
+          format: int64
+          minimum: 1
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+        ttlSeconds:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 3600
+          default: 900
+    TryReservationsRequest:
+      type: object
+      required: [orderId, userId, items]
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          minimum: 1
+        userId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/ReservationItemRequest"
+        ttlSeconds:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 3600
+          default: 900
+    ReservationItemRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: integer
+          format: int64
+          minimum: 1
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+    InventoryReservation:
+      type: object
+      required: [orderId, userId, productId, quantity, status, expiresAt]
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        userId:
+          type: string
+          format: uuid
+        productId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [TRY, CONFIRMED, CANCELLED]
+        expiresAt:
+          type: string
+          format: date-time
+    CreateOrderRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/CreateOrderItemRequest"
+    CreateOrderItemRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: integer
+          format: int64
+          minimum: 1
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+    OrderItem:
+      type: object
+      required: [productId, productName, unitPriceMinor, quantity]
+      properties:
+        productId:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        unitPriceMinor:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int64
+    Order:
+      type: object
+      required: [orderId, userId, status, totalMinor, currency, paymentDeadline, version, createdAt, items]
+      properties:
+        orderId:
+          type: string
+          pattern: "^[0-9]+$"
+          description: String-encoded 64-bit Snowflake ID to preserve precision in JavaScript clients
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ACCEPTED, PENDING_PAYMENT, CONFIRMING_INVENTORY, INVENTORY_CONFIRMATION_FAILED, PAID, EXPIRED, REJECTED, FAILED]
+        totalMinor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        paymentDeadline:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+    OrderPage:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int64
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        errors:
+          type: object
+          additionalProperties:
+            type: string

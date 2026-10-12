@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vincentwang.ecommerce.order.infrastructure.persistence.IOrderMapper">
+  <resultMap id="orderResult" type="com.vincentwang.ecommerce.order.domain.model.Order">
+    <id property="orderId" column="order_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="status" column="status" javaType="com.vincentwang.ecommerce.order.domain.model.OrderStatus"/>
+    <result property="totalMinor" column="total_minor"/>
+    <result property="currency" column="currency"/>
+    <result property="idempotencyKey" column="idempotency_key"/>
+    <result property="paymentDeadline" column="payment_deadline"/>
+    <result property="version" column="version"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+
+  <resultMap id="itemResult" type="com.vincentwang.ecommerce.order.domain.model.OrderItem">
+    <id property="orderItemId" column="order_item_id"/>
+    <result property="orderId" column="order_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="productId" column="product_id"/>
+    <result property="productName" column="product_name"/>
+    <result property="unitPriceMinor" column="unit_price_minor"/>
+    <result property="quantity" column="quantity"/>
+  </resultMap>
+
+  <sql id="orderColumns">
+    order_id, user_id, status, total_minor, currency, idempotency_key,
+    payment_deadline, version, created_at, updated_at
+  </sql>
+
+  <insert id="insertOrder" parameterType="com.vincentwang.ecommerce.order.domain.model.Order">
+    INSERT INTO orders
+      (order_id, user_id, status, total_minor, currency, idempotency_key, payment_deadline, version)
+    VALUES
+      (#{orderId}, #{userId}, #{status}, #{totalMinor}, #{currency}, #{idempotencyKey},
+       #{paymentDeadline}, 0)
+  </insert>
+
+  <insert id="insertItem" parameterType="com.vincentwang.ecommerce.order.domain.model.OrderItem">
+    INSERT INTO order_items
+      (order_item_id, order_id, user_id, product_id, product_name, unit_price_minor, quantity)
+    VALUES
+      (#{orderItemId}, #{orderId}, #{userId}, #{productId}, #{productName}, #{unitPriceMinor}, #{quantity})
+  </insert>
+
+  <select id="findById" resultMap="orderResult">
+    SELECT <include refid="orderColumns"/> FROM orders
+    WHERE user_id = #{userId} AND order_id = #{orderId}
+  </select>
+
+  <select id="findByIdempotencyKey" resultMap="orderResult">
+    SELECT <include refid="orderColumns"/>
+    FROM orders WHERE user_id = #{userId} AND idempotency_key = #{idempotencyKey}
+  </select>
+
+  <select id="findByUserId" resultMap="orderResult">
+    SELECT <include refid="orderColumns"/> FROM orders
+    WHERE user_id = #{userId}
+    ORDER BY created_at DESC, order_id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countByUserId" resultType="long">
+    SELECT COUNT(*) FROM orders WHERE user_id = #{userId}
+  </select>
+
+  <select id="findItems" resultMap="itemResult">
+    SELECT order_item_id, order_id, user_id, product_id, product_name, unit_price_minor, quantity
+    FROM order_items WHERE user_id = #{userId} AND order_id = #{orderId} ORDER BY order_item_id
+  </select>
+
+  <update id="markPendingPayment">
+    UPDATE orders SET status = 'PENDING_PAYMENT', version = version + 1
+    WHERE user_id = #{userId} AND order_id = #{orderId} AND status = 'ACCEPTED'
+  </update>
+
+  <update id="markConfirmingInventory">
+    UPDATE orders SET status = 'CONFIRMING_INVENTORY', version = version + 1
+    WHERE user_id = #{userId} AND order_id = #{orderId} AND status = 'PENDING_PAYMENT'
+  </update>
+
+  <update id="markPaid">
+    UPDATE orders SET status = 'PAID', version = version + 1
+    WHERE user_id = #{userId} AND order_id = #{orderId}
+      AND status IN ('CONFIRMING_INVENTORY', 'INVENTORY_CONFIRMATION_FAILED')
+  </update>
+
+  <update id="markInventoryConfirmationFailed">
+    UPDATE orders SET status = 'INVENTORY_CONFIRMATION_FAILED', version = version + 1
+    WHERE user_id = #{userId} AND order_id = #{orderId} AND status = 'CONFIRMING_INVENTORY'
+  </update>
+
+  <select id="findExpiredForUpdate" resultMap="orderResult">
+    SELECT <include refid="orderColumns"/> FROM orders
+    WHERE status = 'PENDING_PAYMENT' AND payment_deadline &lt;= CURRENT_TIMESTAMP(6)
+    ORDER BY payment_deadline, order_id
+    LIMIT #{limit}
+    FOR UPDATE SKIP LOCKED
+  </select>
+
+  <update id="markExpired">
+    UPDATE orders SET status = 'EXPIRED', version = version + 1
+    WHERE user_id = #{userId} AND order_id = #{orderId} AND status = 'PENDING_PAYMENT'
+  </update>
+
+  <insert id="insertProcessedEvent">
+    INSERT IGNORE INTO processed_event (user_id, consumer_name, event_id)
+    VALUES (#{userId}, #{consumerName}, #{eventId})
+  </insert>
+
+  <insert id="insertOutbox">
+    INSERT INTO order_outbox
+      (user_id, event_id, aggregate_id, event_type, partition_key, payload, occurred_at)
+    VALUES
+      (#{userId}, #{eventId}, #{aggregateId}, #{eventType}, #{partitionKey}, CAST(#{payload} AS JSON), #{occurredAt})
+  </insert>
+
+  <select id="findUnpublishedOutbox" resultType="com.vincentwang.ecommerce.order.infrastructure.messaging.OrderOutboxEvent">
+    SELECT user_id, event_id, aggregate_id, event_type, partition_key,
+           CAST(payload AS CHAR) AS payload, occurred_at
+    FROM order_outbox
+    WHERE published_at IS NULL
+    ORDER BY occurred_at, event_id
+    LIMIT #{limit}
+    FOR UPDATE SKIP LOCKED
+  </select>
+
+  <update id="markOutboxPublished">
+    UPDATE order_outbox SET published_at = CURRENT_TIMESTAMP(6)
+    WHERE user_id = #{userId} AND event_id = #{eventId} AND published_at IS NULL
+  </update>
+</mapper>

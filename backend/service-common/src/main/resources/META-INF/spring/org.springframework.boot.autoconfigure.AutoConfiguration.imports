@@ -1,0 +1,2 @@
+com.vincentwang.ecommerce.common.configuration.CommonKafkaAutoConfiguration
+com.vincentwang.ecommerce.common.configuration.CommonWebAutoConfiguration
