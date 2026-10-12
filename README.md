@@ -23,10 +23,16 @@ The storefront uses a clean, responsive shopping flow from product discovery thr
   </tr>
   <tr>
     <td width="50%">
-      <strong>Cart drawer</strong><br>
-      <img src="docs/images/ui/cart-drawer.png" alt="Responsive cart drawer with quantity controls">
+      <strong>Live search</strong><br>
+      <img src="docs/images/ui/search.png" alt="Fuzzy product search with ranked suggestions and category filters">
     </td>
     <td width="50%">
+      <strong>Cart drawer</strong><br>
+      <img src="docs/images/ui/cart-drawer.png" alt="Responsive cart drawer with quantity controls and checkout summary">
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
       <strong>Full cart</strong><br>
       <img src="docs/images/ui/cart.png" alt="Full shopping cart and order summary">
     </td>
