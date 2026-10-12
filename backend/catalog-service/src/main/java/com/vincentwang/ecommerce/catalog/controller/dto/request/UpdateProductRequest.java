@@ -1,12 +1,7 @@
 package com.vincentwang.ecommerce.catalog.controller.dto.request;
 
 import com.vincentwang.ecommerce.catalog.model.ProductStatus;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record UpdateProductRequest(
         @NotNull @Positive Long categoryId,

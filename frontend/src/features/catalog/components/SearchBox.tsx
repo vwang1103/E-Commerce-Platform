@@ -10,6 +10,7 @@ import { ProductArtwork } from "./ProductArtwork";
 
 const MIN_QUERY_LENGTH = 2;
 
+/** Provides debounced search suggestions and keyboard navigation to products or full results. */
 export function SearchBox({ className = "" }: Readonly<{ className?: string }>) {
   const router = useRouter();
   const listId = useId();

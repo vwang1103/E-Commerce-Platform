@@ -26,6 +26,7 @@ export class ApiError extends Error {
   }
 }
 
+/** Centralizes gateway calls and converts non-success responses into one frontend error shape. */
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${configuredBaseUrl}${path}`, {
     ...init,
@@ -68,6 +69,7 @@ async function listAllProducts(): Promise<Product[]> {
   return items;
 }
 
+/** Typed operations exposed to features; pages do not construct backend requests directly. */
 export const api = {
   login(username: string) {
     return request<UserIdentity>("/api/v1/login", {

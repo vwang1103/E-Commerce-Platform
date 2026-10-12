@@ -6,6 +6,7 @@ import { AccountMenu } from "./AccountMenu";
 import { Icon } from "./Icon";
 import { SearchBox } from "@/features/catalog/components/SearchBox";
 
+/** Global navigation that combines product discovery, account actions, and cart access. */
 export function Header() {
   const { count, setDrawerOpen } = useCart();
 

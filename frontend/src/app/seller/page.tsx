@@ -88,6 +88,7 @@ function StockCell({ inventory, loading }: Readonly<{ inventory: Inventory | nul
   );
 }
 
+/** Coordinates the signed-in user's product list, editing workflow, and opening stock. */
 export default function SellerPage() {
   const { userId, username } = useUser();
   const { byId } = useCategories();

@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+/** Builds the physical order databases and exposes them through one sharded data source. */
 @Configuration
 public class ShardingSphereOrderDataSourceConfiguration {
     @Bean(destroyMethod = "close")

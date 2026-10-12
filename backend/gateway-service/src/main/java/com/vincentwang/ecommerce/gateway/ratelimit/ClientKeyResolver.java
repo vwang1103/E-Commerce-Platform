@@ -9,6 +9,7 @@ import org.springframework.cloud.gateway.support.ipresolver.XForwardedRemoteAddr
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/** Chooses a stable rate-limit key from the user ID, falling back to the client address. */
 public class ClientKeyResolver implements KeyResolver {
 
     private static final Pattern VALID_USER_ID = Pattern.compile(PlatformHttpHeaders.UUID_PATTERN);

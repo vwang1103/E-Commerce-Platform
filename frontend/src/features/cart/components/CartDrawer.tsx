@@ -14,6 +14,7 @@ import { TotalsText } from "./Totals";
 
 const close = () => cartActions.setDrawerOpen(false);
 
+/** Compact cart view backed by the same persisted state as the full cart page. */
 export function CartDrawer() {
   const { lines, count, totals, drawerOpen, setQuantity, remove } = useCart();
   const { byId } = useCategories();

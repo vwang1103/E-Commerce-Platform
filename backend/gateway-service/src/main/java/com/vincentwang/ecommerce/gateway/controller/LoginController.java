@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** A simple passwordless identity endpoint */
+/** Supplies a deterministic passwordless identity for the local storefront experience. */
 @RestController
 @RequestMapping("/api/v1/login")
 public class LoginController {

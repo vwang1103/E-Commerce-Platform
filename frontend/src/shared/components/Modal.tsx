@@ -4,6 +4,7 @@ import { useId, type ReactNode } from "react";
 import { useModalBehavior } from "@/shared/hooks/useModalBehavior";
 import { Icon } from "./Icon";
 
+/** Reusable accessible dialog shell with backdrop dismissal and page scroll locking. */
 export function Modal({
   open,
   onClose,

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
+/** Persists orders through MyBatis and the ShardingSphere-backed data source. */
 @Repository
 public class MyBatisOrderRepository implements IOrderRepository {
 

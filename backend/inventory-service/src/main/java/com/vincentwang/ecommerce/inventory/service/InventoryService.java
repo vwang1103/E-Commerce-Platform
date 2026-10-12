@@ -31,6 +31,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Coordinates authoritative MySQL stock with fast, idempotent Redis reservations. */
 @Service
 public class InventoryService implements IInventoryService {
 

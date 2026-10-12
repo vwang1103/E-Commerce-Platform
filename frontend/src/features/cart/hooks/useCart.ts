@@ -16,6 +16,7 @@ import { createMemoryStore, createPersistedStore, useStore } from "@/shared/lib/
 const cartStore = createPersistedStore<readonly CartLine[]>("arcade.cart.v1", EMPTY_CART, parseCart);
 const drawerStore = createMemoryStore(false);
 
+/** Shared cart commands keep page and drawer interactions on the same persisted state. */
 export const cartActions = {
   add(line: CartLine) {
     cartStore.set(addLine(cartStore.getSnapshot(), line));
@@ -38,6 +39,7 @@ export function getCartLines(): readonly CartLine[] {
   return cartStore.getSnapshot();
 }
 
+/** Exposes cart state together with derived item counts and totals. */
 export function useCart() {
   const lines = useStore(cartStore);
   const drawerOpen = useStore(drawerStore);

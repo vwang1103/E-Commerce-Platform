@@ -13,6 +13,7 @@ import { cartTotals } from "@/features/cart/lib/cart";
 import { pluralize } from "@/shared/lib/format";
 import { useHydrated } from "@/shared/lib/store";
 
+/** Reviews the cart with refreshed product and stock data before checkout. */
 export default function CartPage() {
   const hydrated = useHydrated();
   const { lines, count, setQuantity, remove, clear } = useCart();

@@ -19,6 +19,7 @@ import { toast } from "@/shared/lib/toast";
 const PAGE_SIZE = 10;
 const FETCH_LIMIT = 100;
 
+/** Lists the current user's orders and refreshes while workflows remain active. */
 function Orders() {
   const params = useSearchParams();
   const router = useRouter();

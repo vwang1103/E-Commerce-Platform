@@ -21,6 +21,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
+/** Implements product indexing and ranked fuzzy search against Elasticsearch. */
 @Component
 @ConditionalOnProperty(prefix = "catalog.search.elasticsearch", name = "enabled", havingValue = "true")
 public class ElasticsearchProductSearchRepository implements IProductSearchRepository {

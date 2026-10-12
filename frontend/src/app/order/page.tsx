@@ -35,6 +35,7 @@ function describeReservation(reservation: InventoryReservation): string {
   return `Stock held until ${formatDateTime(reservation.expiresAt)}`;
 }
 
+/** Tracks one order through reservation, payment, and asynchronous confirmation. */
 function OrderDetail({ orderId }: Readonly<{ orderId: string }>) {
   const { userId } = useUser();
   const [paying, setPaying] = useState(false);

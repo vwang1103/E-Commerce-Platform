@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/** Closes overdue unpaid orders and publishes their inventory cancellation work. */
 @Component
 @ConditionalOnProperty(prefix = "order.expiry", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ExpiredOrderScheduler {

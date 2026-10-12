@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/** Starts checkout and order lifecycle processing, including its HTTP and event-driven integrations. */
 @EnableFeignClients
 @EnableScheduling
 @SpringBootApplication

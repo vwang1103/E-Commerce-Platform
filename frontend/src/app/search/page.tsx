@@ -16,6 +16,7 @@ import { pluralize } from "@/shared/lib/format";
 const PAGE_SIZE = 12;
 const SUGGESTED_SEARCHES = ["headphones", "keyboard", "desk lamp", "notebook", "coffee", "charger"];
 
+/** Presents Elasticsearch results with category filters and sorting controls. */
 function SearchView({ query, page }: Readonly<{ query: string; page: number }>) {
   const router = useRouter();
   const { categories } = useCategories();

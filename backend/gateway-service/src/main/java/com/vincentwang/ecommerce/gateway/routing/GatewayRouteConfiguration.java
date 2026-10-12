@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import tools.jackson.databind.ObjectMapper;
 
+/** Defines the external API surface and attaches the appropriate rate limit to each route. */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(GatewayRateLimitProperties.class)
 public class GatewayRouteConfiguration {

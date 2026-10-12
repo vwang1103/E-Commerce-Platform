@@ -24,6 +24,7 @@ const PERKS: ReadonlyArray<{ icon: IconName; text: string }> = [
   { icon: "package", text: "Track every order from placed to paid" },
 ];
 
+/** Loads one product and its inventory, then coordinates cart and buy-now actions. */
 function ProductDetail({ productId }: Readonly<{ productId: number }>) {
   const router = useRouter();
   const { lines, add, setDrawerOpen } = useCart();

@@ -36,6 +36,7 @@ function describeFailure(reason: unknown): string {
   return toError(reason, "This item couldn't be ordered.").message;
 }
 
+/** Reviews the cart, validates current stock, and places each selected line as an order. */
 function Review() {
   const router = useRouter();
   const hydrated = useHydrated();

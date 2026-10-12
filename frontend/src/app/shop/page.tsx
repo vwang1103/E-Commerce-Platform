@@ -24,6 +24,7 @@ import { pluralize } from "@/shared/lib/format";
 
 const PAGE_SIZE = 12;
 
+/** Coordinates URL-driven catalog filters, sorting, pagination, and live stock. */
 function Shop() {
   const params = useSearchParams();
   const router = useRouter();

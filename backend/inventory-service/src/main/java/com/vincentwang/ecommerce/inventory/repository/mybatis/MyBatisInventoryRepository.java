@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
+/** Keeps MyBatis persistence details behind the inventory repository interface. */
 @Repository
 public class MyBatisInventoryRepository implements IInventoryRepository {
 

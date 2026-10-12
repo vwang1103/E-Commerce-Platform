@@ -7,6 +7,7 @@ import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { LoginScreen } from "./LoginScreen";
 
+/** Composes the shared storefront frame and gates it behind the local demo identity. */
 export function StorefrontShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const hydrated = useHydrated();
   const { user } = useUser();

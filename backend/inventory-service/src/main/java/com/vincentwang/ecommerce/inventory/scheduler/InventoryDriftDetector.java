@@ -4,6 +4,7 @@ import com.vincentwang.ecommerce.inventory.service.IInventoryService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/** Detects differences between authoritative MySQL stock and the Redis reservation view. */
 @Component
 public class InventoryDriftDetector {
 

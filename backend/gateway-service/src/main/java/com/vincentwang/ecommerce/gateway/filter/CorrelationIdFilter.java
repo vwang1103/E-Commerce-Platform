@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/** Propagates a safe correlation ID through downstream services and back to the caller. */
 @Component
 public class CorrelationIdFilter implements GlobalFilter, Ordered {
 

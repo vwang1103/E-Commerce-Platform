@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+/** Enforces one route policy and returns a consistent problem response when traffic is throttled. */
 public class RateLimitGatewayFilter implements GatewayFilter {
 
     static final String RATE_LIMIT_STATUS_HEADER = "X-RateLimit-Status";

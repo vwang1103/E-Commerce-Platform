@@ -30,6 +30,7 @@ const SHOP_PROMISES: ReadonlyArray<{ icon: IconName; title: string; detail: stri
   },
 ];
 
+/** Storefront landing page that derives promotional collections from the live catalog. */
 export default function HomePage() {
   const catalog = useAsync(loadCatalog, []);
   const products = useMemo(() => catalog.data ?? [], [catalog.data]);

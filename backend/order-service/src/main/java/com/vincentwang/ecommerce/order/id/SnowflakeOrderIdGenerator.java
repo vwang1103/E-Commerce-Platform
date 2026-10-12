@@ -4,6 +4,7 @@ import java.time.Clock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/** Generates sortable IDs from time, worker identity, and an in-millisecond sequence. */
 @Component
 public class SnowflakeOrderIdGenerator implements IOrderIdGenerator {
     private static final long EPOCH = 1_767_225_600_000L;

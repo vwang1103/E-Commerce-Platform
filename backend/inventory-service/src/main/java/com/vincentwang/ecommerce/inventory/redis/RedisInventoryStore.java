@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
+/** Executes atomic Lua operations for the fast inventory reservation view stored in Redis. */
 @Component
 public class RedisInventoryStore implements IInventoryReservationStore {
 

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/** Retries durable MySQL-to-Redis synchronization work until the cache converges. */
 @Component
 public class RedisInventorySyncScheduler {
     private final IInventoryService inventoryService;
