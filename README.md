@@ -2,6 +2,47 @@
 
 A e-commerce app with a Next.js storefront and four Spring Boot services: Gateway, Catalog, Inventory, and Order. The backend demonstrates Consul discovery, load-balanced OpenFeign calls, Kafka/outbox workflows, Elasticsearch search, Redis Lua inventory reservations, and two-shard order storage.
 
+## UI Design
+
+The storefront uses a clean, responsive shopping flow from product discovery through inventory reservation, simulated payment, and order tracking.
+
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Product catalog</strong><br>
+      <img src="docs/images/ui/shop.png" alt="Product catalog with search, filters, sorting, and product cards">
+    </td>
+    <td width="50%">
+      <strong>Product details</strong><br>
+      <img src="docs/images/ui/product-detail.png" alt="Product details with quantity, cart, and buy-now actions">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <strong>Cart drawer</strong><br>
+      <img src="docs/images/ui/cart-drawer.png" alt="Responsive cart drawer with quantity controls">
+    </td>
+    <td width="50%">
+      <strong>Full cart</strong><br>
+      <img src="docs/images/ui/cart.png" alt="Full shopping cart and order summary">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <strong>Reserved checkout</strong><br>
+      <img src="docs/images/ui/checkout-reserved.png" alt="Checkout with reserved inventory and payment countdown">
+    </td>
+    <td width="50%">
+      <strong>Payment complete</strong><br>
+      <img src="docs/images/ui/checkout-complete.png" alt="Successful simulated payment confirmation">
+    </td>
+  </tr>
+</table>
+
+### Order tracking
+
+![Paid order details with fulfillment progress and item summary](docs/images/ui/order-detail.png)
+
 ## Run it
 
 Requires Docker Compose. From the repository root:
