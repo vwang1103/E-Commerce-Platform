@@ -63,6 +63,10 @@ The storefront uses a clean, responsive shopping flow from product discovery thr
 
 ![Paid order details with fulfillment progress and item summary](docs/images/ui/order-detail.png)
 
+### Seller console
+
+![Seller console with product management and new-product form](docs/images/ui/seller-console.png)
+
 ## Run it
 
 Requires Docker Compose. From the repository root:
