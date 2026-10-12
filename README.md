@@ -41,6 +41,16 @@ The storefront uses a clean, responsive shopping flow from product discovery thr
       <img src="docs/images/ui/checkout-complete.png" alt="Successful simulated payment confirmation">
     </td>
   </tr>
+  <tr>
+    <td width="50%">
+      <strong>Account menu</strong><br>
+      <img src="docs/images/ui/account-menu.png" alt="Signed-in account menu with orders, seller tools, and sign-out actions">
+    </td>
+    <td width="50%">
+      <strong>Order history</strong><br>
+      <img src="docs/images/ui/order-history.png" alt="Order history with status filters, item previews, and totals">
+    </td>
+  </tr>
 </table>
 
 ### Order tracking
