@@ -6,6 +6,10 @@ A e-commerce app with a Next.js storefront and four Spring Boot services: Gatewa
 
 The storefront uses a clean, responsive shopping flow from product discovery through inventory reservation, simulated payment, and order tracking.
 
+### Storefront home
+
+![Storefront home page with featured collection and promotional product cards](docs/images/ui/home.png)
+
 <table>
   <tr>
     <td width="50%">
