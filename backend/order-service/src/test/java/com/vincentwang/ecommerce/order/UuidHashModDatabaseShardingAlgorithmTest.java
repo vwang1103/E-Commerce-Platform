@@ -2,7 +2,7 @@ package com.vincentwang.ecommerce.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.vincentwang.ecommerce.order.infrastructure.configuration.UuidHashModDatabaseShardingAlgorithm;
+import com.vincentwang.ecommerce.order.configuration.UuidHashModDatabaseShardingAlgorithm;
 import java.util.List;
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
 import org.junit.jupiter.api.Test;

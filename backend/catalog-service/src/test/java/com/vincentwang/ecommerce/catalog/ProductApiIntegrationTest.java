@@ -2,13 +2,13 @@ package com.vincentwang.ecommerce.catalog;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.vincentwang.ecommerce.catalog.api.dto.request.CreateProductRequest;
-import com.vincentwang.ecommerce.catalog.api.dto.request.UpdateProductRequest;
-import com.vincentwang.ecommerce.catalog.api.dto.response.CategoryResponse;
-import com.vincentwang.ecommerce.catalog.api.dto.response.ProductResponse;
-import com.vincentwang.ecommerce.catalog.api.dto.response.ProductSearchResponse;
-import com.vincentwang.ecommerce.catalog.domain.model.ProductStatus;
-import com.vincentwang.ecommerce.catalog.infrastructure.persistence.IProductMapper;
+import com.vincentwang.ecommerce.catalog.controller.dto.request.CreateProductRequest;
+import com.vincentwang.ecommerce.catalog.controller.dto.request.UpdateProductRequest;
+import com.vincentwang.ecommerce.catalog.controller.dto.response.CategoryResponse;
+import com.vincentwang.ecommerce.catalog.controller.dto.response.ProductResponse;
+import com.vincentwang.ecommerce.catalog.controller.dto.response.ProductSearchResponse;
+import com.vincentwang.ecommerce.catalog.model.ProductStatus;
+import com.vincentwang.ecommerce.catalog.repository.mybatis.IProductMapper;
 import com.vincentwang.ecommerce.common.web.ApiPageResponse;
 import com.vincentwang.ecommerce.common.web.PlatformHttpHeaders;
 import java.util.Objects;

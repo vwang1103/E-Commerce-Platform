@@ -90,6 +90,9 @@ Open the storefront at `http://localhost:8084` or the [interactive API docs](doc
 | `deploy/local/` | Compose and container builds |
 | `deploy/aws/` | Runnable TypeScript CDK/CloudFormation deployment |
 
-Within each service, start at `api` (HTTP), then the `I*Service` contract and implementation in `application` (use cases), `domain` (business state), and `infrastructure` (MyBatis, Redis, Kafka, Feign, or Elasticsearch). Repository interfaces remain at the application boundary.
+Each business service uses a direct layered structure: start at `controller`, follow the `I*Service`
+interface into its `service` implementation, then follow repository or external-client interfaces to
+the explicitly named `repository`, `redis`, `search`, `client`, or `messaging` implementation. Shared
+business state lives in `model`.
 
 Read the [project structure guide](docs/architecture/project-structure.md) for module responsibilities and the [Swagger UI guide](docs/api/README.md) to try the current API. The local login is username-only for demonstration; it is not production authentication. The [AWS deployment guide](deploy/aws/README.md) explains how a clone can provision the EC2-based architecture in its own account. The CDK code synthesizes successfully, but no live AWS deployment or performance benchmark is claimed by this repository.

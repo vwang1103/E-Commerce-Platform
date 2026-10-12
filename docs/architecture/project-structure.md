@@ -34,77 +34,83 @@ integration tests, and coverage configuration. The four `*-service` modules are 
 deployable Spring Boot applications. `service-common` is a JAR with no application bootstrap.
 
 Services do not import one another's implementation classes or share database schemas. Order calls
-Inventory and Catalog through application client interfaces implemented with OpenFeign. Kafka event
-payloads are integration contracts rather than shared service domain classes.
+Inventory and Catalog through client interfaces implemented with OpenFeign. Kafka event payloads
+remain integration contracts owned by the service that publishes them.
 
 ### Business-service package convention
 
-Catalog, Inventory, and Order use the same pragmatic DDD and Clean Architecture layout:
+Catalog, Inventory, and Order use a conventional layered structure with interfaces between the
+controller, service, persistence, and external-system implementations:
 
 ```text
 src/main/java/com/vincentwang/ecommerce/<service>/
 ├── <Service>ServiceApplication.java
-├── api/
+├── controller/
 │   ├── <Service>Controller.java
 │   └── dto/
 │       ├── request/
 │       └── response/
-├── application/
+├── service/
 │   ├── I<Service>Service.java
-│   ├── <Service>ApplicationService.java
-│   ├── I<Dependency>.java        Explicit client or capability contracts
-│   ├── exception/
-│   ├── model/                 Internal models that differ from API DTOs
-│   └── repository/            Persistence contracts
-├── domain/
-│   └── model/                 Business entities, value objects, statuses, and invariants
-└── infrastructure/
-    ├── configuration/
-    ├── persistence/
-    └── <technology>/          Messaging, Redis, search, clients, schedulers, or ID generation
+│   ├── <Service>Service.java
+│   └── exception/
+├── model/                     Business entities, statuses, and internal data shapes
+├── repository/
+│   ├── I<Entity>Repository.java
+│   └── mybatis/               MyBatis implementations and mapper interfaces
+├── client/                    OpenFeign interfaces and adapters when needed
+├── messaging/                 Kafka consumers, publishers, events, and outbox records
+├── redis/                     Redis contracts, implementation, and Lua wiring when needed
+├── search/                    Elasticsearch adapter and configuration when needed
+├── scheduler/                 Background expiry and synchronization jobs
+├── id/                        ID contract and implementation when needed
+└── configuration/             Remaining framework configuration
 ```
 
 The normal call direction is:
 
 ```text
-Controller → IService → ApplicationService → domain model
-                                  ↓
-                     application repository/client interface
-                                  ↑ implemented by
-                     infrastructure adapter
+Controller → IService → Service → model
+                              ↓
+                 repository/client interface
+                              ↓
+                 explicitly named implementation
 ```
 
-This project intentionally uses API request/response DTOs directly at the application boundary when
-an additional command or query type would contain the same fields. A separate application model is
-created only when its meaning or shape differs, such as `ProductQuote`, `ProductSearchDocument`, or
+Request and response DTOs stay beside the controllers. The service interfaces use those DTOs directly
+when another command or query type would only duplicate the same fields. The shared `model` package
+contains business state and internal shapes such as `ProductQuote`, `ProductSearchDocument`, and
 `InventorySyncTask`.
 
 ### Package responsibilities
 
-- `api` validates HTTP input and maps HTTP routes. Controllers depend on `IService`, never concrete
-  services or infrastructure.
-- `application` owns orchestration, transactions, use-case interfaces, application failures, and
-  contracts required from external technology.
-- `domain` owns business state and rules. Redis-, Kafka-, MyBatis-, Feign-, and HTTP-specific names do
-  not belong here.
-- `infrastructure` implements application contracts and contains framework wiring.
+- `controller` validates HTTP input and maps routes. Controllers depend on `IService`, never directly
+  on repositories or technology implementations.
+- `service` owns orchestration, transactions, the public use-case interface, its implementation, and
+  business exceptions.
+- `model` owns business entities, statuses, and internal data passed between service dependencies.
+- `repository` owns persistence interfaces; `repository/mybatis` contains their MyBatis implementations.
+- `client`, `redis`, `search`, `messaging`, and `id` keep their interfaces beside explicitly named
+  implementations so the dependency is easy to find.
+- `scheduler` owns background jobs, while `configuration` contains general framework wiring.
 - Interfaces use the requested `I` prefix; abstract classes use `A`; concrete technology adapters use
   explicit names such as `MyBatisOrderRepository`, `KafkaOrderOutboxPublisher`, and
   `SnowflakeOrderIdGenerator`.
 
-ArchUnit tests enforce that domain code remains independent and application code does not depend on
-infrastructure. Test packages mirror production packages. Docker-backed tests end in
-`IntegrationTest`.
+ArchUnit package tests enforce three simple rules: controllers cannot skip the service layer, services
+cannot use concrete technology implementations, and models remain framework-independent. Test
+packages mirror production packages. Docker-backed tests end in `IntegrationTest`.
 
 ### Gateway exception
 
-Gateway is entirely technical and does not pretend to have a domain layer:
+Gateway owns no product, stock, or order data, so it uses only packages that describe its technical
+responsibilities:
 
 ```text
 gateway/
 ├── GatewayServiceApplication.java
-├── api/                      Username-only local login
-├── configuration/
+├── controller/               Username-only local login
+├── routing/                  Public service routes
 ├── filter/
 └── ratelimit/
 ```

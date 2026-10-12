@@ -2,7 +2,6 @@ package com.vincentwang.ecommerce.gateway.ratelimit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.vincentwang.ecommerce.gateway.configuration.GatewayRateLimitProperties;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;

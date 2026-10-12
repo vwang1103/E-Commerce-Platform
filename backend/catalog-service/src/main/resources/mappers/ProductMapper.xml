@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.vincentwang.ecommerce.catalog.infrastructure.persistence.IProductMapper">
-  <resultMap id="productResult" type="com.vincentwang.ecommerce.catalog.domain.model.Product">
+<mapper namespace="com.vincentwang.ecommerce.catalog.repository.mybatis.IProductMapper">
+  <resultMap id="productResult" type="com.vincentwang.ecommerce.catalog.model.Product">
     <id property="productId" column="product_id"/>
     <result property="userId" column="user_id"/>
     <result property="categoryId" column="category_id"/>
@@ -9,7 +9,7 @@
     <result property="description" column="description"/>
     <result property="priceMinor" column="price_minor"/>
     <result property="currency" column="currency"/>
-    <result property="status" column="status" javaType="com.vincentwang.ecommerce.catalog.domain.model.ProductStatus"/>
+    <result property="status" column="status" javaType="com.vincentwang.ecommerce.catalog.model.ProductStatus"/>
     <result property="version" column="version"/>
     <result property="createdAt" column="created_at"/>
     <result property="updatedAt" column="updated_at"/>
@@ -20,7 +20,7 @@
     currency, status, version, created_at, updated_at
   </sql>
 
-  <insert id="insert" parameterType="com.vincentwang.ecommerce.catalog.domain.model.Product"
+  <insert id="insert" parameterType="com.vincentwang.ecommerce.catalog.model.Product"
           useGeneratedKeys="true" keyProperty="productId" keyColumn="product_id">
     INSERT INTO product
       (user_id, category_id, name, description, price_minor, currency, status, version)
@@ -81,7 +81,7 @@
     SELECT EXISTS(SELECT 1 FROM category WHERE category_id = #{categoryId})
   </select>
 
-  <resultMap id="categoryResult" type="com.vincentwang.ecommerce.catalog.domain.model.Category">
+  <resultMap id="categoryResult" type="com.vincentwang.ecommerce.catalog.model.Category">
     <constructor>
       <idArg column="category_id" javaType="_long"/>
       <arg column="parent_category_id" javaType="long"/>
@@ -96,7 +96,7 @@
     ORDER BY category_id ASC
   </select>
 
-  <update id="update" parameterType="com.vincentwang.ecommerce.catalog.domain.model.Product">
+  <update id="update" parameterType="com.vincentwang.ecommerce.catalog.model.Product">
     UPDATE product
     SET category_id = #{categoryId},
         name = #{name},
@@ -128,7 +128,7 @@
   </insert>
 
   <select id="findUnpublishedOutbox"
-          resultType="com.vincentwang.ecommerce.catalog.infrastructure.messaging.CatalogOutboxEvent">
+          resultType="com.vincentwang.ecommerce.catalog.messaging.CatalogOutboxEvent">
     SELECT event_id, aggregate_type, aggregate_id, event_type,
            CAST(payload AS CHAR) AS payload, occurred_at
     FROM catalog_outbox

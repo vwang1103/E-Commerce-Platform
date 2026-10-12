@@ -2,7 +2,7 @@ package com.vincentwang.ecommerce.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.vincentwang.ecommerce.order.infrastructure.id.SnowflakeOrderIdGenerator;
+import com.vincentwang.ecommerce.order.id.SnowflakeOrderIdGenerator;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

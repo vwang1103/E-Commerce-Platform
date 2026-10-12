@@ -2,15 +2,15 @@ package com.vincentwang.ecommerce.inventory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.vincentwang.ecommerce.inventory.api.dto.request.CreateInventoryRequest;
-import com.vincentwang.ecommerce.inventory.api.dto.request.ReservationItemRequest;
-import com.vincentwang.ecommerce.inventory.api.dto.request.TryReservationRequest;
-import com.vincentwang.ecommerce.inventory.api.dto.request.TryReservationsRequest;
-import com.vincentwang.ecommerce.inventory.api.dto.response.InventoryResponse;
-import com.vincentwang.ecommerce.inventory.api.dto.response.ReservationResponse;
-import com.vincentwang.ecommerce.inventory.application.IInventoryService;
-import com.vincentwang.ecommerce.inventory.application.exception.InsufficientStockException;
-import com.vincentwang.ecommerce.inventory.domain.model.ReservationStatus;
+import com.vincentwang.ecommerce.inventory.controller.dto.request.CreateInventoryRequest;
+import com.vincentwang.ecommerce.inventory.controller.dto.request.ReservationItemRequest;
+import com.vincentwang.ecommerce.inventory.controller.dto.request.TryReservationRequest;
+import com.vincentwang.ecommerce.inventory.controller.dto.request.TryReservationsRequest;
+import com.vincentwang.ecommerce.inventory.controller.dto.response.InventoryResponse;
+import com.vincentwang.ecommerce.inventory.controller.dto.response.ReservationResponse;
+import com.vincentwang.ecommerce.inventory.model.ReservationStatus;
+import com.vincentwang.ecommerce.inventory.service.IInventoryService;
+import com.vincentwang.ecommerce.inventory.service.exception.InsufficientStockException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;

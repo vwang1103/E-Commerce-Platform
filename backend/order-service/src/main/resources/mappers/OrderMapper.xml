@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.vincentwang.ecommerce.order.infrastructure.persistence.IOrderMapper">
-  <resultMap id="orderResult" type="com.vincentwang.ecommerce.order.domain.model.Order">
+<mapper namespace="com.vincentwang.ecommerce.order.repository.mybatis.IOrderMapper">
+  <resultMap id="orderResult" type="com.vincentwang.ecommerce.order.model.Order">
     <id property="orderId" column="order_id"/>
     <result property="userId" column="user_id"/>
-    <result property="status" column="status" javaType="com.vincentwang.ecommerce.order.domain.model.OrderStatus"/>
+    <result property="status" column="status" javaType="com.vincentwang.ecommerce.order.model.OrderStatus"/>
     <result property="totalMinor" column="total_minor"/>
     <result property="currency" column="currency"/>
     <result property="idempotencyKey" column="idempotency_key"/>
@@ -14,7 +14,7 @@
     <result property="updatedAt" column="updated_at"/>
   </resultMap>
 
-  <resultMap id="itemResult" type="com.vincentwang.ecommerce.order.domain.model.OrderItem">
+  <resultMap id="itemResult" type="com.vincentwang.ecommerce.order.model.OrderItem">
     <id property="orderItemId" column="order_item_id"/>
     <result property="orderId" column="order_id"/>
     <result property="userId" column="user_id"/>
@@ -29,7 +29,7 @@
     payment_deadline, version, created_at, updated_at
   </sql>
 
-  <insert id="insertOrder" parameterType="com.vincentwang.ecommerce.order.domain.model.Order">
+  <insert id="insertOrder" parameterType="com.vincentwang.ecommerce.order.model.Order">
     INSERT INTO orders
       (order_id, user_id, status, total_minor, currency, idempotency_key, payment_deadline, version)
     VALUES
@@ -37,7 +37,7 @@
        #{paymentDeadline}, 0)
   </insert>
 
-  <insert id="insertItem" parameterType="com.vincentwang.ecommerce.order.domain.model.OrderItem">
+  <insert id="insertItem" parameterType="com.vincentwang.ecommerce.order.model.OrderItem">
     INSERT INTO order_items
       (order_item_id, order_id, user_id, product_id, product_name, unit_price_minor, quantity)
     VALUES
@@ -116,7 +116,7 @@
       (#{userId}, #{eventId}, #{aggregateId}, #{eventType}, #{partitionKey}, CAST(#{payload} AS JSON), #{occurredAt})
   </insert>
 
-  <select id="findUnpublishedOutbox" resultType="com.vincentwang.ecommerce.order.infrastructure.messaging.OrderOutboxEvent">
+  <select id="findUnpublishedOutbox" resultType="com.vincentwang.ecommerce.order.messaging.OrderOutboxEvent">
     SELECT user_id, event_id, aggregate_id, event_type, partition_key,
            CAST(payload AS CHAR) AS payload, occurred_at
     FROM order_outbox

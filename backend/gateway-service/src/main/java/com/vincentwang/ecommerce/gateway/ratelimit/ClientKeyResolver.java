@@ -1,7 +1,6 @@
 package com.vincentwang.ecommerce.gateway.ratelimit;
 
 import com.vincentwang.ecommerce.common.web.PlatformHttpHeaders;
-import com.vincentwang.ecommerce.gateway.configuration.GatewayRateLimitProperties;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.regex.Pattern;
